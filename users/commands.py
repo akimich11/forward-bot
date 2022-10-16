@@ -1,30 +1,52 @@
-import settings
 from base.bot import bot
 from base.decorators import exception_handler, access_checker
-from users.service import UserService
+from users.service import UserService, MessageService
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 @bot.message_handler(commands=['start'])
 @exception_handler
 def send_start_message(message):
-    bot.send_message(message.chat.id, 'Привет. Можешь отправлять мне поздравления в любом виде, я всё передам Илье')
+    bot.send_message(message.chat.id, 'Привет. Можешь отправлять мне сообщения для Ильи в любом виде, я передам. '
+                                      'Но сначала подпиши их, пожалуйста: нажми /register')
+
+
+@bot.message_handler(commands=['register'])
+def register(message):
+    UserService.create_user(message.from_user.id)
+    bot.send_message(message.chat.id, 'Отправь своё имя. Можно ненастоящее, главное чтобы Илья понял, от кого')
 
 
 @bot.message_handler(commands=['read'])
-@access_checker
-def send_greetings(message):
-    greetings = UserService.get_greeting_messages()
-    gr_dict = {user_id: [] for user_id, _ in greetings}
-    for user_id, text in greetings:
-        gr_dict[user_id].append(text)
-
-    bot.send_message(message.chat.id, f"Поздравления от пользователя {settings.SUPERUSER_ID}")
-    for message_id in gr_dict[settings.SUPERUSER_ID]:
-        bot.forward_message(message.chat.id, settings.SUPERUSER_ID, message_id)
-
-
-@bot.message_handler(content_types=['text'])
 @exception_handler
+@access_checker(admin_only=True)
+def send_users_markup(message):
+    users = [name for _, name in MessageService.get_users_who_sent_greetings()]
+    buttons = [InlineKeyboardButton(username, callback_data=username) for username in users]
+    markup = InlineKeyboardMarkup(row_width=2)
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, 'Есть сообщения от следующих пользователей', reply_markup=markup)
+
+
+@bot.message_handler(content_types=['text', 'photo', 'sticker'])
+@exception_handler
+@access_checker()
 def collect_message(message):
-    UserService.save_message(message)
-    bot.send_message(message.chat.id, 'Сообщение получено')
+    if UserService.get_user_name(message.from_user.id) is None:
+        UserService.set_user_name(message.from_user.id, message.text)
+        bot.send_message(message.chat.id, 'Записал имя, можешь отправлять поздравления')
+    else:
+        MessageService.save_message(message)
+        bot.send_message(message.chat.id, 'Сообщение получено', reply_to_message_id=message.id)
+
+
+@bot.callback_query_handler(lambda call: True)
+@exception_handler
+@access_checker(admin_only=True)
+def send_greetings(call):
+    user_id = UserService.get_user_id(call.data)
+    greetings = MessageService.get_greeting_messages(user_id)
+    bot.edit_message_text(call.message.text, call.message.chat.id, call.message.id, reply_markup=None)
+    bot.send_message(call.message.chat.id, f"Поздравления от пользователя {call.data}:")
+    for message_id in greetings:
+        bot.forward_message(call.message.chat.id, user_id, message_id)

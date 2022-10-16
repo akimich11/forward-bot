@@ -6,15 +6,23 @@ from base.bot import bot
 from users.service import UserService
 
 
-def access_checker(func):
-    @functools.wraps(func)
-    def wrapped(message, *args, **kwargs):
-        if message.from_user.id != settings.SUPERUSER_ID:
-            bot.send_message(message.chat.id, 'Команда доступна только Илье')
-        else:
-            return func(message, *args, *kwargs)
+def access_checker(admin_only=False):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapped(message, *args, **kwargs):
+            is_user_allowed = UserService.is_user_in_db(message.from_user.id)
+            is_ilya = message.from_user.id == settings.ILYA_ID
+            if (admin_only and is_ilya) or (not admin_only and is_user_allowed):
+                return func(message, *args, *kwargs)
 
-    return wrapped
+            if admin_only and not is_ilya:
+                bot.send_message(message.chat.id, 'Команда доступна только Илье')
+            elif not admin_only and not is_user_allowed:
+                bot.send_message(message.chat.id, 'Сначала подпишись, пожалуйста. Нажми /register и отправь своё имя. '
+                                                  'Можешь и ненастоящее имя указать -- главное, чтобы Илья понял, '
+                                                  'от кого сообщение')
+        return wrapped
+    return decorator
 
 
 def exception_handler(function):

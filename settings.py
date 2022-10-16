@@ -17,3 +17,4 @@ else:
     DATABASE_NAME = os.getenv('DATABASE_NAME')
 
 SUPERUSER_ID = os.getenv('SUPERUSER_ID', 270241310)
+ILYA_ID = os.getenv('ILYA_ID', 270241310)
