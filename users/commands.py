@@ -21,11 +21,15 @@ def register(message):
 @exception_handler
 @access_checker(admin_only=True)
 def send_users_markup(message):
-    users = [name for _, name in MessageService.get_users_who_sent_greetings()]
-    buttons = [InlineKeyboardButton(username, callback_data=username) for username in users]
-    markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(*buttons)
-    bot.send_message(message.chat.id, 'Есть сообщения от следующих пользователей', reply_markup=markup)
+    users = MessageService.get_users_who_sent_greetings()
+    if users is not None:
+        users = [name for _, name in users]
+        buttons = [InlineKeyboardButton(username, callback_data=username) for username in users]
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(*buttons)
+        bot.send_message(message.chat.id, 'Есть сообщения от следующих пользователей', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Пока никто ничего не написал :(')
 
 
 @bot.message_handler(content_types=['text', 'photo', 'sticker'])
