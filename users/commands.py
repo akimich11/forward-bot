@@ -32,7 +32,8 @@ def send_users_markup(message):
         bot.send_message(message.chat.id, 'Пока никто ничего не написал :(')
 
 
-@bot.message_handler(content_types=['text', 'photo', 'sticker'])
+@bot.message_handler(content_types=['text', 'photo', 'sticker', 'animation',
+                                    'audio', 'document', 'video', 'voice', 'poll', 'location'])
 @exception_handler
 @access_checker()
 def collect_message(message):
