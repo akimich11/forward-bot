@@ -33,7 +33,7 @@ def send_users_markup(message):
 
 
 @bot.message_handler(content_types=['text', 'photo', 'sticker', 'animation',
-                                    'audio', 'document', 'video', 'voice', 'poll', 'location'])
+                                    'audio', 'document', 'video', 'voice', 'poll', 'location', 'video_note'])
 @exception_handler
 @access_checker()
 def collect_message(message):
