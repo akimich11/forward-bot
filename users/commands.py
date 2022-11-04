@@ -23,8 +23,7 @@ def register(message):
 def send_users_markup(message):
     users = MessageService.get_users_who_sent_greetings()
     if users is not None:
-        users = [name for _, name in users]
-        buttons = [InlineKeyboardButton(username, callback_data=username) for username in users]
+        buttons = [InlineKeyboardButton(username, callback_data=str(user_id)) for user_id, username in users]
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(*buttons)
         bot.send_message(message.chat.id, 'Есть сообщения от следующих пользователей', reply_markup=markup)
@@ -49,9 +48,10 @@ def collect_message(message):
 @exception_handler
 @access_checker(admin_only=True)
 def send_greetings(call):
-    user_id = UserService.get_user_id(call.data)
+    user_id = int(call.data)
+    username = UserService.get_user_name(user_id)
     greetings = MessageService.get_greeting_messages(user_id)
     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.id, reply_markup=None)
-    bot.send_message(call.message.chat.id, f"Поздравления от пользователя {call.data}:")
+    bot.send_message(call.message.chat.id, f"Поздравления от пользователя {username}:")
     for message_id in greetings:
         bot.forward_message(call.message.chat.id, user_id, message_id)
