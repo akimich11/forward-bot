@@ -19,7 +19,7 @@ class MessageService(db.ConnectionMixin):
     @classmethod
     @db.fetch(return_type='all_tuples')
     def get_users_who_sent_greetings(cls, cursor):
-        cursor.execute("SELECT DISTINCT u.id, name FROM ilya_messages JOIN users u ON u.id = messages.user_id ")
+        cursor.execute("SELECT DISTINCT u.id, name FROM ilya_messages JOIN users u ON u.id = ilya_messages.user_id ")
 
 
 class UserService(db.ConnectionMixin):
