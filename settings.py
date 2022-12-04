@@ -1,5 +1,8 @@
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN = os.getenv('BOT_TOKEN', '5769222315:AAHnXxNBO0PV0qxjhxmHhTYq4icO3qUeSbA')
 
@@ -17,4 +20,4 @@ else:
     DATABASE_NAME = os.getenv('DATABASE_NAME')
 
 SUPERUSER_ID = os.getenv('SUPERUSER_ID', 270241310)
-ILYA_ID = os.getenv('ILYA_ID', 270241310)
+ILYA_ID = os.getenv('ILYA_ID', 5868576464)

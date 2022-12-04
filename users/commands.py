@@ -7,14 +7,8 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 @bot.message_handler(commands=['start'])
 @exception_handler
 def send_start_message(message):
-    bot.send_message(message.chat.id, 'Привет. Можешь отправлять мне сообщения для Ильи в любом виде, я передам. '
-                                      'Но сначала подпиши их, пожалуйста: нажми /register')
-
-
-@bot.message_handler(commands=['register'])
-def register(message):
-    UserService.create_user(message.from_user.id)
-    bot.send_message(message.chat.id, 'Отправь своё имя. Можно ненастоящее, главное чтобы Илья понял, от кого')
+    bot.send_message(message.chat.id, 'Привет. Пока ты был на зоне, я собирал сообщения для тебя. '
+                                      'Чтобы их прочитать, напиши /read')
 
 
 @bot.message_handler(commands=['read'])
@@ -31,19 +25,6 @@ def send_users_markup(message):
         bot.send_message(message.chat.id, 'Пока никто ничего не написал :(')
 
 
-@bot.message_handler(content_types=['text', 'photo', 'sticker', 'animation',
-                                    'audio', 'document', 'video', 'voice', 'poll', 'location', 'video_note'])
-@exception_handler
-@access_checker()
-def collect_message(message):
-    if UserService.get_user_name(message.from_user.id) is None:
-        UserService.set_user_name(message.from_user.id, message.text)
-        bot.send_message(message.chat.id, 'Записал имя, можешь отправлять поздравления')
-    else:
-        MessageService.save_message(message)
-        bot.send_message(message.chat.id, 'Сообщение получено', reply_to_message_id=message.id)
-
-
 @bot.callback_query_handler(lambda call: True)
 @exception_handler
 @access_checker(admin_only=True)
@@ -52,6 +33,6 @@ def send_greetings(call):
     username = UserService.get_user_name(user_id)
     greetings = MessageService.get_greeting_messages(user_id)
     bot.edit_message_text(call.message.text, call.message.chat.id, call.message.id, reply_markup=None)
-    bot.send_message(call.message.chat.id, f"Поздравления от пользователя {username}:")
+    bot.send_message(call.message.chat.id, f"Сообщения от пользователя {username}:")
     for message_id in greetings:
         bot.forward_message(call.message.chat.id, user_id, message_id)
